@@ -23,4 +23,5 @@ Navigate to each checkpoint folder to view the code and documentation for that a
 
 ## Notes
 
-[Add any additional notes about the course or assignments]
+## Author
+Cole Looney
