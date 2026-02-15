@@ -1,0 +1,28 @@
+# MVP Lecture Three
+
+## Key Topics
+
+- [ ] Topic 1
+- [ ] Topic 2
+- [ ] Topic 3
+
+## Notes
+
+### Section 1
+_Add notes here_
+
+### Section 2
+_Add notes here_
+
+## Questions
+
+- Question 1?
+- Question 2?
+
+## Action Items
+
+- [ ] Follow up on...
+- [ ] Review...
+
+---
+_Last updated: [Date]_
