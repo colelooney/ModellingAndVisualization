@@ -11,6 +11,37 @@ import argparse
 from scipy.signal import convolve2d
 from collections import deque
 
+PATTERNS = {
+        #spaceships
+        'glider': np.array([[0,2],[1,0],[2,1],[2,2],[1,2]]),
+        'LWSS': np.array([[0,0], [0,2], [1,3], [2,3], [3,0], [3,3], [4,1], [4,2], [4,3]]),
+        'MWSS': np.array([[0,2], [1,0], [1,4], [2,5], [3,0], [3,5], [4,1], [4,2], [4,3], [4,4], [4,5]]),
+        'HWSS': np.array([[0,2], [0,3], [1,0], [1,5], [2,6], [3,0], [3,6], [4,1], [4,2], [4,3], [4,4], [4,5], [4,6]]),
+
+        # still lifes
+        'block': np.array([[0,0],[1,0],[0,1],[1,1]]),
+        'beehive': np.array([[1,0],[2,0],[0,1],[3,1],[1,2],[2,2]]),
+        'loaf': np.array([[1,0],[2,0],[0,1],[3,1],[1,2],[3,2],[2,3]]),
+        'boat': np.array([[0,0],[1,0],[0,1],[2,1],[1,2]]),
+        'tub': np.array([[1,0],[0,1],[2,1],[1,2]]),
+
+        #oscillators
+        'blinker': np.array([[0,0],[1,0],[2,0]]),
+        'toad': np.array([[1,0],[2,0],[3,0],[0,1],[1,1],[2,1]]),
+        'beacon': np.array([[0,0],[1,0],[0,1],[3,2],[2,3],[3,3]]),
+        'pulsar': np.array([[2,0],[3,0],[4,0],[8,0],[9,0],[10,0],
+                            [0,2],[5,2],[7,2],[12,2],
+                            [0,3],[5,3],[7,3],[12,3],
+                            [0,4],[5,4],[7,4],[12,4],
+                            [2,5],[3,5],[4,5],[8,5],[9,5],[10,5],
+                            [2,7],[3,7],[4,7],[8,7],[9,7],[10,7],
+                            [0,8],[5,8],[7,8],[12,8],
+                            [0,9],[5,9],[7,9],[12,9],
+                            [0,10],[5,10],[7,10],[12,10],
+                            [2,12],[3,12],[4,12],[8,12],[9,12],[10,12]])
+
+    }
+
 class GameOfLife:
     def __init__(self,N,initial_state,debug,alive_fraction,num_runs):
         """
@@ -34,6 +65,8 @@ class GameOfLife:
 
         self.equilibrium_times = [] # list to store the time taken to reach equilibrium for each simulation runs
         self.centres_of_mass = [] # list to store the centre of mass of the alive cells at each time step
+        self.initial_state_patterns = PATTERNS
+
         self.initialize_grid()
 
 
@@ -55,27 +88,14 @@ class GameOfLife:
                 p = [1 - self.alive_fraction, self.alive_fraction]
             )
         
-        if self.initial_state == 'glider':
+        else:
             grid = np.zeros((self.N,self.N))
-            glider_pattern = np.array([[0,2],[1,0],[2,1],[2,2],[1,2]])
-            for cell in glider_pattern:
-                grid[cell[0],cell[1]] = 1
-            
-        if self.initial_state == 'square':
-            grid = np.zeros((self.N,self.N))
-            random_x = np.random.randint(0,self.N)
-            random_y = np.random.randint(0,self.N)
-            square_pattern = np.array([[random_x,random_y],[(random_x+1)%self.N,random_y],[random_x,(random_y+1)%self.N],[(random_x+1)%self.N,(random_y+1)%self.N]])
-            for cell in square_pattern:
-                grid[cell[0],cell[1]] = 1
+            random_x, random_y = np.random.randint(0,self.N, size=2)
+            pattern = self.initial_state_patterns[self.initial_state]
+            for cell in pattern:
+                x, y = (random_x + cell[0]) % self.N, (random_y + cell[1]) % self.N
+                grid[x, y] = 1
 
-        if self.initial_state == 'blinker':
-            grid = np.zeros((self.N,self.N))
-            random_x = np.random.randint(0,self.N)
-            random_y = np.random.randint(0,self.N)
-            oscillator_pattern = np.array([[random_x,random_y],[random_x-1,random_y],[random_x+1,random_y]])
-            for cell in oscillator_pattern:
-                grid[cell[0],cell[1]] = 1
         return grid
     
 
@@ -223,7 +243,7 @@ class GameOfLife:
 
         if self.initial_state in ['random']:
             self.plot_equilibrium_times()
-        self.plot_centres_of_mass()
+        # self.plot_centres_of_mass()
 
         
     def calculate_speed(self):
@@ -274,18 +294,20 @@ class GameOfLife:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Ising Model Simulation')
-    parser.add_argument('--N', type=int, default=50, help='Size of the lattice (N x N)')
-    parser.add_argument('--initial_state', type=str,default='random',choices= ['random','glider','square','blinker'], help='Initial state of the lattice (random or ordered)')
+    parser = argparse.ArgumentParser(description='Conway\'s Game of Life Simulation')
+    choices = ['random'] + list(PATTERNS.keys())
+
+    parser.add_argument('-N','--size', type=int, default=50, help='Size of the lattice (N x N)')
+    parser.add_argument('-S','--initial_state', type=str,default='random',choices= choices, help='Initial state of the lattice (random or ordered)')
     parser.add_argument('--debug',action='store_true',help ='Enable debug mode to print additional information during simulation')
-    parser.add_argument('--alive_fraction',type=float,default=0.5,help='Fraction of cells that are initially alive (only used if initial_state is random)')
+    parser.add_argument('-F','--alive_fraction',type=float,default=0.5,help='Fraction of cells that are initially alive (only used if initial_state is random)')
     parser.add_argument('--animate',action='store_true',help='Animate the evolution of the grid over time')
-    parser.add_argument('--num_runs',type=int,default=1000,help='Number of simulation runs to perform for averaging equilibrium times')
+    parser.add_argument('-R','--num_runs',type=int,default=1000,help='Number of simulation runs to perform for averaging equilibrium times')
 
     args = parser.parse_args()
 
     model = GameOfLife(
-        N=args.N,
+        N=args.size,
         initial_state=args.initial_state,
         debug = args.debug,
         alive_fraction = args.alive_fraction,
@@ -297,7 +319,7 @@ if __name__ == "__main__":
     if args.animate:
         model.animate()
     
-    elif args.initial_state == 'glider':
+    elif args.initial_state in ['glider','LWSS','MWSS','HWSS']:
         model.glider_run()
 
     else:
