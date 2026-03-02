@@ -10,7 +10,7 @@ import matplotlib.animation as animation
 import argparse
 from collections import deque
 from matplotlib.colors import ListedColormap
-from numba import njit, jit
+from numba import njit
 
 @njit
 def find_nearest_neighbors(grid,i,j):
@@ -73,7 +73,6 @@ class SIRS:
         self.grid = None
         self.debug = debug
         self.num_runs = num_runs
-        self.history = deque(maxlen=2)
         self.S = S
         self.I = I
         self.R = R
@@ -88,7 +87,7 @@ class SIRS:
     def initialize_grid(self):
         """
         generate inital grid of states, dimension N x N
-        character states: 0 = susceptible, 1 = infected, 2 = recovered        
+        character states: 0 = susceptible, 1 = infected, 2 = recovered, 3 = permanently immune      
 
         returns:
         grid: N x N numpy array of states
@@ -105,11 +104,11 @@ class SIRS:
     def find_nearest_neighbors(self,i,j):
         """
         finds the nearest neighbors for a given point in the lattice assuming periodic boundary counditions
-        returns as list of neighbors
+        returns as set of neighbors
 
         returns:
 
-        nearest_neighbors: set of tuples representing nearest neighbor state in grid
+        nearest_neighbors: set of ints representing nearest neighbor state in grid
         Set chosen for computational efficiency in checking for membership when determining if a cell has infected neighbors, 
         since we only need to know if at least one neighbor is infected rather than counting the number of infected neighbors
         """
@@ -124,10 +123,16 @@ class SIRS:
         for coord in nearest_neighbors_coordinates:
                 nearest_neighbors.add(self.grid[coord])
         if self.debug:
-            print(f'nearest neighbors for cell ({i},{j}): {nearest_neighbors}')
+            print(f'nearest neighbors states for cell ({i},{j}): {nearest_neighbors}')
         return nearest_neighbors
 
     def update_cell(self, x, y):
+        """
+        Update the state of a single cell based on the SIRS model rules
+
+        returns:
+        None: updates the state of the cell in place in the grid
+        """
         current_state = self.grid[x,y]
 
         if current_state == 0: # susceptible
@@ -140,6 +145,12 @@ class SIRS:
             self.grid[x,y] = 0 if np.random.rand() <= self.R else 2
 
     def sweep(self):
+        """
+        Perform a single sweep of the grid, updating each cell once on average
+        
+        returns:
+        None: updates the state of the grid in place after performing a sweep
+        """
         for _ in range(self.N**2):
             i,j = np.random.randint(0,self.N), np.random.randint(0,self.N) # randomly select a cell to update
             self.update_cell(i,j)
@@ -195,6 +206,8 @@ class SIRS:
 
         returns:
         None: prints the average time taken to reach equilibrium across all runs
+
+        stores the data for the plot in a .npz file for later analysis
         """
         self.I = 0.5
 
@@ -238,6 +251,8 @@ class SIRS:
 
         returns:
         None: prints the average variance of the number of infected cells at equilibrium across all runs
+
+        stores the data for the plot in a .npz file for later analysis
         """
         self.I = 0.5
         self.R = 0.5
@@ -252,6 +267,7 @@ class SIRS:
             infected_squared_count = []
             for _ in range(100): # equilibriration
                 sweep(self.grid,self.S,self.I,self.R)
+
             for run in range(self.num_runs * 10):
                 sweep(self.grid,self.S,self.I,self.R)
                 if run % 10 == 0:
@@ -289,6 +305,15 @@ class SIRS:
                  )
         
     def run_immunity(self):
+        """
+        Run the simulation until equilibrium is reached and record the average fraction of infected cells at 
+        equilibrium for different values of f, the fraction of recovered cells that become permanently immune
+
+        returns:
+        None: plots the average fraction of infected cells at equilibrium for different values of f
+
+        stores the data for the plot in a .npz file for later analysis
+        """
         self.S = 0.5
         self.I = 0.5
         self.R = 0.5
@@ -324,15 +349,24 @@ class SIRS:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='SIRS Model Simulation')
 
+    # General simulation parameters
     parser.add_argument('-N','--size', type=int, default=50, help='Size of the lattice (N x N)')
-    parser.add_argument('--debug',action='store_true',help ='Enable debug mode to print additional information during simulation')
-    parser.add_argument('--animate',action='store_true',help='Animate the evolution of the grid over time')
-    parser.add_argument('--num_runs',type=int,default=1000,help='Number of simulation runs to perform for averaging equilibrium times')
+    parser.add_argument('--num_runs',type=int,default=1000,help='Number of simulation runs to perform')
+    parser.add_argument('--resolution',type=float,default=0.05,help='Update resolution for probability updates in run method (default: 0.05)')
+
+    # Model Parameters for SIRS model
     parser.add_argument('-S','--infected_prob',type=float,default=0.5,help='Probability of a susceptible cell becoming infected')
     parser.add_argument('-I','--recovery_prob',type=float,default=0.5,help='Probability of an infected cell recovering')
     parser.add_argument('-R','--resusceptibility_prob',type=float,default=0.5,help='Probability of a recovered cell becoming susceptible again')
     parser.add_argument('-f','--immune_fraction',type=float,default=0.0,help='Fraction of recovered cells that become permanently immune')
-    parser.add_argument('--resolution',type=float,default=0.05,help='Update resolution for probability updates in run method (default: 0.05)')
+
+    # Function level arguments for running specific analyses or enabling debug mode
+    parser.add_argument('--animate',action='store_true',help='Animate the evolution of the grid over time')
+    parser.add_argument('--run_variance',action='store_true',help='Run the simulation to calculate the variance of the number of infected cells at equilibrium')
+    parser.add_argument('--run_immunity',action='store_true',help='Run the simulation to analyze the effect of permanent immunity on equilibrium infection levels')
+    parser.add_argument('--debug',action='store_true',help ='Enable debug mode to print additional information during simulation')
+
+
     args = parser.parse_args()
 
     model = SIRS(
@@ -345,12 +379,24 @@ if __name__ == "__main__":
         f = args.immune_fraction,
         resolution = args.resolution
         )
+    
     if args.debug:
         # Print the inital grid state for debugging purposes
         model.plot_single_frame()
     if args.animate:
+        if args.debug:
+            print('Starting animation of SIRS model evolution...')
         model.animate()
 
-    else:
-        # model.run()
+    elif args.run_variance:
+        if args.debug:
+            print('Starting variance analysis of SIRS model at equilibrium...')
+        model.run_variance()
+    elif args.run_immunity:
+        if args.debug:
+            print('Starting analysis of effect of permanent immunity on SIRS model equilibrium infection levels...')
         model.run_immunity()
+    else:
+        if args.debug:
+            print('Starting main simulation run to analyze equilibrium infection levels across S and R parameter space...')
+        model.run()
