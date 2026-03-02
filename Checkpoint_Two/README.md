@@ -82,22 +82,30 @@ python SIRS.py [OPTIONS]
 
 | Argument | Short | Type | Default | Description |
 |----------|-------|------|---------|-------------|
-| `--lattice-size` | `-N` | int | 50 | Grid size (N × N) |
-| `--steps` | `-S` | int | 1000 | Number of simulation steps |
-| `--infection-rate` | `-p` | float | 0.3 | Infection probability per neighbour (SIRS) |
-| `--recovery-rate` | `-r` | float | 0.5 | Recovery rate (SIRS) |
-| `--immunity-loss` | `-nu` | float | 0.1 | Immunity loss rate (SIRS) |
-| `--function` | — | str | `animate` | `animate` or `plot` |
-| `--save_fig` | — | flag | False | Save generated plots |
+| `--model` | | str | None | SIRS or Game of Life Model|
+| `--size` | `-N` | int | 50 | Grid size (N × N) |
+| `--num_runs` | | int | 1000 | Number of simulation steps |
 
+|`--initial_state`| | str | random | initial state for Game of Life  (GOL)|
+|`--alive_fraction`| `F` | float | 0.5 | fraction of initially alive cells (GOL) | 
+
+| `--infection_prob` | `S` | float | 0.5 | Infection probability per neighbour (SIRS) |
+| `--recovery_prob` | `-I` | float | 0.5 | Recovery rate (SIRS) |
+| `--resusceptibility_prob` | `-R` | float | 0.5 | Immunity loss rate (SIRS) |
+| `--immune_fraction`| `-f` | float | 0.0 | percent of permanently immune cells (SIRS)|
+
+| `--animate`|| action | None | Animate evolution |
+| `--debug`|| action | None | Run additional debug functions |
+| `--run_variance| | action | None | Run Variance Data Collection (SIRS) |
+| `--run_immunity| | action | None | Run Immunity Data Collection (SIRS) |
 #### Examples
 
 Animate Game of Life with default parameters:
 ```bash
-python game_of_life.py --function animate
+python main.py --model game_of_life --function animate
 ```
 
-Run SIRS model with custom infection dynamics and save results:
+Run SIRS model with custom infection dynamics and determine average immunity:
 ```bash
-python sirs_model.py -N 100 -S 5000 -p 0.2 -r 0.3 --save_fig
+python main.py --model sirs --run_variance -N 100 
 ```
