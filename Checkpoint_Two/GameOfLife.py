@@ -100,6 +100,12 @@ class GameOfLife:
     
 
     def determine_equilibriation(self):
+        """
+        Determine if the system has reached equilibrium by checking if the current state of the grid matches any of the previous states stored in the history
+        
+        returns:
+        bool: True if the system has reached equilibrium, False otherwise
+        """
         current_hash = self.current_grid.tobytes()
         
         # Check if current state matches any of the stored previous states
@@ -111,6 +117,12 @@ class GameOfLife:
 
 
     def sweep(self):
+        """
+        Perform a single sweep of the Game of Life, updating the future grid based on the current grid according to the rules of the game
+        
+        returns:
+        None: updates the future_grid in place
+        """
         # Compute neighbor count using convolution
         kernel = np.array([[1,1,1],
                         [1,0,1],
@@ -130,6 +142,11 @@ class GameOfLife:
         ).astype(int)
 
     def get_centre_of_mass(self):
+        """
+        Calculate the centre of mass of the alive cells in the current grid
+        
+        returns:
+        centre_of_mass: tuple representing the (x, y) coordinates of the centre of mass of the alive cells, or None if there are no alive cells"""
         indicies = np.argwhere(self.current_grid == 1)
         if len(indicies) == 0: return None
         
@@ -251,7 +268,10 @@ class GameOfLife:
         Calculate the speed of the centre of mass of the alive cells over time
 
         returns:
-        speed: float representing the average speed of the centre of mass
+        slope: the estimated speed of the centre of mass based on a linear fit to the cumulative distance traveled over time
+        cum_dist: the cumulative distance traveled by the centre of mass over time
+        time: the time steps corresponding to each cumulative distance value
+        intercept: the intercept of the linear fit to the cumulative distance vs time data
         """
         centres_of_mass_array = np.array(self.centres_of_mass)
 
