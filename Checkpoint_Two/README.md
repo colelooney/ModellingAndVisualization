@@ -28,7 +28,7 @@ Synchronous updates applied to all cells each generation.
 A stochastic epidemiological model on an $\(N \times N\)$ lattice.
 
 #### States
-- Individual states: $\(s_i \in \{\text{S}, \text{I}, \text{R}, \text{f_{im}}\}\)$  
+- Individual states: $\(s_i \in \{\text{S}, \text{I}, \text{R}, {f_{im}}\}\)$  
     (Susceptible, Infected, Recovered, Permanently Immune (tunable parameter))
 
 #### Transition Rates
