@@ -77,7 +77,7 @@ python main.py [OPTIONS]
 ```bash
 python GameOfLife.py  [OPTIONS]
 python SIRS.py [OPTIONS]
-
+```
 #### Arguments
 
 | Argument | Short | Type | Default | Description |
