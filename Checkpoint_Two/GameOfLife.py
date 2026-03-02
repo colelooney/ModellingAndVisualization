@@ -150,7 +150,15 @@ class GameOfLife:
         indicies = np.argwhere(self.current_grid == 1)
         if len(indicies) == 0: return None
         
-        return np.mean(indicies,axis = 0)
+        theta = (indicies / self.N) * 2 * np.pi
+        mean_cos = np.mean(np.cos(theta), axis=0)
+        mean_sin = np.mean(np.sin(theta), axis=0)
+
+        mean_theta = np.arctan2(mean_sin, mean_cos)
+
+        com = ((mean_theta + 2 * np.pi) % (2 * np.pi)) * self.N / (2 * np.pi)
+    
+        return com
 
 
 
@@ -162,7 +170,6 @@ class GameOfLife:
         None: displays an animation of the grid evolution
         """
         self.current_grid = self.initialize_grid()
-        # self.future_grid = np.copy(self.current_grid) # initialize future grid to be the same as current grid at the start of the animation
     
         fig = plt.figure()
         im = plt.imshow(self.current_grid, animated=True, cmap='binary')
