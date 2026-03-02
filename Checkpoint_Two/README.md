@@ -2,7 +2,7 @@
 # Game of Life and SIRS Model Simulation
 
 This repository contains implementations of **Conway's Game of Life** and the **SIRS (Susceptible-Infected-Recovered-Susceptible) epidemiological model**, written in Python.  
-The code supports visualization and analysis of emergent patterns and disease dynamics, with utilities for computing statistical observables including infection rates, recovery statistics, and spatial correlation analysis.
+The code supports visualization and analysis of emergent patterns and disease dynamics, with utilities for computing statistical observables
 
 ---
 
@@ -10,7 +10,7 @@ The code supports visualization and analysis of emergent patterns and disease dy
 
 ### Game of Life
 
-A cellular automaton on an \(N \times N\) grid with periodic boundary conditions.
+A cellular automaton on an $\(N \times N\)$ grid with periodic boundary conditions.
 
 #### States
 - Cell states: $\(\sigma_i \in \{\text{alive}, \text{dead}\}\)$
@@ -25,30 +25,29 @@ Synchronous updates applied to all cells each generation.
 
 ### SIRS Model
 
-A stochastic epidemiological model on an \(N \times N\) lattice.
+A stochastic epidemiological model on an $\(N \times N\)$ lattice.
 
 #### States
-- Individual states: \(s_i \in \{\text{S}, \text{I}, \text{R}\}\)  
-    (Susceptible, Infected, Recovered)
+- Individual states: $\(s_i \in \{\text{S}, \text{I}, \text{R}, \text{f_{im}}\}\)$  
+    (Susceptible, Infected, Recovered, Permanently Immune (tunable parameter))
 
 #### Transition Rates
-- Infection: \(\text{S} \to \text{I}\) with probability proportional to infected neighbours
-- Recovery: \(\text{I} \to \text{R}\) with rate \(\gamma\)
-- Loss of immunity: \(\text{R} \to \text{S}\) with rate \(\nu\)
+- Infection: $\(\text{S} \to \text{I}\)$ with probability $\(P_{S}\)$ if at least one neighbor infected
+- Recovery: $\(\text{I} \to \text{R}\)$ with probability $\(P_{I}\)$
+- Loss of immunity: $\(\text{R} \to \text{S}\)$ with probability $\(P_{R}\)$
 
 ---
 
 ## Measured Observables
 
 ### Game of Life
-- Population density (fraction of alive cells)
-- Still-life and oscillator detection
-- Pattern classification
+- Time to Equilibrium
+- Glider Speeds
 
 ### SIRS Model
-- Infected fraction: \(I(t) = \frac{1}{N^2}\sum_i \mathbb{1}[s_i = I]\)
-- Susceptible fraction: \(S(t)\)
-- Time-averaged infection rate during stationary state
+- Infected fraction at equilibrium: $\(I(t) = \frac{1}{N^2}\sum_i \mathbb{1}[s_i = I]\)$
+- Average Infected Fraction against permanent immunity
+- Variance of infected cells at equilibrium
 
 ---
 
@@ -58,18 +57,26 @@ A stochastic epidemiological model on an \(N \times N\) lattice.
 - Python ≥ 3.8
 - NumPy
 - Matplotlib
+- argparse
+- collections
+- scipy
+- numba (if running SIRS model in it's script)
 
 Install dependencies via:
 ```bash
-pip install numpy matplotlib
+pip install requirements.txt
 ```
 
 ### Running Simulations
 
 ```bash
-python game_of_life.py [OPTIONS]
-python sirs_model.py [OPTIONS]
+python main.py [OPTIONS]
 ```
+
+### Running individual simulations
+```bash
+python GameOfLife.py  [OPTIONS]
+python SIRS.py [OPTIONS]
 
 #### Arguments
 
