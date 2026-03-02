@@ -3,3 +3,4 @@
 *.txt
 *.zip
 *.npz
+__pycache__/
