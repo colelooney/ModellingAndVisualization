@@ -13,7 +13,7 @@ The code supports visualization and analysis of emergent patterns and disease dy
 A cellular automaton on an \(N \times N\) grid with periodic boundary conditions.
 
 #### States
-- Cell states: \(\sigma_i \in \{\text{alive}, \text{dead}\}\)
+- Cell states: $\(\sigma_i \in \{\text{alive}, \text{dead}\}\)$
 
 #### Rules
 - A live cell survives if it has 2–3 live neighbours
