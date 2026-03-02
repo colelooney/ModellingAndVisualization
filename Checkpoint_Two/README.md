@@ -82,7 +82,7 @@ python SIRS.py [OPTIONS]
 
 | Argument | Short | Type | Default | Description |
 |----------|-------|------|---------|-------------|
-| `--model` | | str | None | SIRS or Game of Life Model|
+| `--model` | | str |  | SIRS or Game of Life Model|
 | `--size` | `-N` | int | 50 | Grid size (N × N) |
 | `--num_runs` | | int | 1000 | Number of simulation steps |
 |`--initial_state`| | str | random | initial state for Game of Life  (GOL)|
@@ -91,10 +91,10 @@ python SIRS.py [OPTIONS]
 | `--recovery_prob` | `-I` | float | 0.5 | Recovery rate (SIRS) |
 | `--resusceptibility_prob` | `-R` | float | 0.5 | Immunity loss rate (SIRS) |
 | `--immune_fraction`| `-f` | float | 0.0 | percent of permanently immune cells (SIRS)|
-| `--animate`|| action | None | Animate evolution |
-| `--debug`|| action | None | Run additional debug functions |
-| `--run_variance| | action | None | Run Variance Data Collection (SIRS) |
-| `--run_immunity| | action | None | Run Immunity Data Collection (SIRS) |
+| `--animate`|| action |  | Animate evolution |
+| `--debug`|| action |  | Run additional debug functions |
+| `--run_variance`| | action | | Run Variance Data Collection (SIRS) |
+| `--run_immunity`| | action |  | Run Immunity Data Collection (SIRS) |
 
 #### Examples
 
