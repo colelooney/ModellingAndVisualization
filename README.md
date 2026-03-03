@@ -9,7 +9,7 @@ Each folder represents a checkpoint assignment within the course:
 
 - **Checkpoint 1** - Ising Model Simulation
 - **Checkpoint 2** - Conway's Game of Life & SIRS Model
-- **Checkpoint 3** - N/A
+- **Checkpoint 3** - Partial Differential Equation Solver
 
 ## Getting Started
 
