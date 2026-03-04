@@ -229,7 +229,7 @@ class GameOfLife:
         slope, cum_dist, time, intercept = self.calculate_speed()
 
         np.savez(f'{self.initial_state}',
-                 centres_of_mass = self.centres_of_mass_array,
+                 centres_of_mass =centres_of_mass_array,
                  times = time,
                  speed = slope,
                  distance = cum_dist,
