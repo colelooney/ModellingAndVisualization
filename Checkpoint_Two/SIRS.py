@@ -299,8 +299,7 @@ class SIRS:
 
         np.savez(f'{self.resolution}_sirs_infection_variance_plot_data.npz',
                  variance_data=variance,
-                 S_vales=np.arange(0,1+self.resolution,self.resolution),
-                 R_values=np.arange(0,1+self.resolution,self.resolution),
+                 S_vales=np.arange(0.2,0.5+self.resolution,self.resolution),
                  variance_errors=variance_errors
                  )
         
