@@ -203,6 +203,10 @@ class GameOfLife:
         returns:
         None: displays a histogram of equilibrium times
         """
+
+        np.savez(f'{self.initial_state}_equilibrium_times',
+                 equilibrium_times = self.equilibrium_times)
+
         plt.hist(self.equilibrium_times, bins=50, color='orange', alpha=0.7)
         plt.title('Distribution of Equilibrium Times')
         plt.xlabel('Time to Equilibrium (steps)')
@@ -210,6 +214,7 @@ class GameOfLife:
         # plt.grid(True)
         plt.savefig(f'{self.initial_state}_equilibrium_times_histogram.png')
         plt.show()
+
 
     def plot_centres_of_mass(self):
         """
@@ -222,6 +227,14 @@ class GameOfLife:
         centres_of_mass_array = np.array(self.centres_of_mass)
 
         slope, cum_dist, time, intercept = self.calculate_speed()
+
+        np.savez(f'{self.initial_state}',
+                 centres_of_mass = self.centres_of_mass_array,
+                 times = time,
+                 speed = slope,
+                 distance = cum_dist,
+                 y_intercept = intercept)
+        
         plt.plot(time, cum_dist, 'bo', markersize=2, color='blue', label='Centre of Mass Trajectory')
         plt.plot(time, slope*time + intercept, 'r-', label=f'Fit: v={slope:.3f}') 
         plt.legend()
