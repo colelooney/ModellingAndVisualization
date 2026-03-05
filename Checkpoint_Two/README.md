@@ -100,10 +100,41 @@ python SIRS.py [OPTIONS]
 
 Animate Game of Life with default parameters:
 ```bash
-python main.py --model game_of_life --function animate
+python main.py --model game_of_life --animate
 ```
 
-Run SIRS model with custom infection dynamics and determine average immunity:
+Collect Equilibrium Histogram data from Game of Life
+```bash
+python main.py --model game_of_life
+or
+python GameOfLife.py
+```
+
+Collect Glider Speed data from Game of Life
+```bash
+python main.py --model game_of_life --initial_state glider
+or
+python GameOfLife.py --initial_state glider
+```
+
+
+Run SIRS model with custom infection dynamics and determine variance of immunity:
 ```bash
 python main.py --model sirs --run_variance -N 100 
+or
+python SIRS.py --run_variance -N 100
+```
+
+Collect Immunity fraction as function of permanently immune in SIRS:
+```bash
+python main.py --model sirs --run_immunity
+or
+python SIRS.py --run_immunity
+```
+
+Collect Average Immunity heatmap for specified transition rates in SIRS:
+```bash
+python main.py --model sirs -S 0.4 -I 0.3 -R 0.7
+or
+python SIRS.py -S 0.4 -I 0.3 -R 0.7
 ```
