@@ -21,9 +21,9 @@ The Cahn–Hilliard equation models **phase separation** in binary mixtures.
 
 ### Governing Equation
 
-\[
+$\[
 \frac{\partial \phi}{\partial t} = \nabla^2 \mu
-\]
+\]$
 
 where the chemical potential is:
 
