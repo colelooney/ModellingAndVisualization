@@ -27,29 +27,29 @@ $\[
 
 where the chemical potential is:
 
-\[
+$\[
 \mu = -\phi + \phi^3 - \nabla^2 \phi
-\]
+\]$
 
 ### Physical Meaning
-- \(\phi(x, y)\): local composition field
+- $\(\phi(x, y)\)$: local composition field
 - System evolves to minimise free energy
 - Leads to **spinodal decomposition** and domain formation
 
 ### Free Energy Functional
 
-\[
+$\[
 F = \int \left(-\frac{1}{2}\phi^2 + \frac{1}{4}\phi^4 + \frac{1}{2}|\nabla \phi|^2 \right) dV
-\]
+\]$
 
 ### Numerical Implementation
 
-- 2D lattice: \(N \times N\)
+- 2D lattice: $\(N \times N\)$
 - Periodic boundary conditions
 - Finite difference Laplacian
 - Explicit time stepping:
-  - Compute \(\mu\)
-  - Update: \(\phi \leftarrow \phi + dt \nabla^2 \mu\)
+  - Compute $\(\mu\)$
+  - Update: $\(\phi \leftarrow \phi + dt \nabla^2 \mu\)$
 
 ### Observables
 
@@ -65,28 +65,28 @@ The Poisson equation governs electrostatic and magnetostatic potentials.
 
 ### Governing Equation
 
-\[
+$\[
 \nabla^2 \Phi = -\rho
-\]
+\]$
 
 ### Physical Interpretations
 
 #### Electrostatics (Monopole)
-- \(\Phi\): electric potential
-- \(\mathbf{E} = -\nabla \Phi\)
+- $\(\Phi\)$: electric potential
+- $\(\mathbf{E} = -\nabla \Phi\)$
 - Expected scaling:
-  - \(E \sim r^{-2}\)
-  - \(\Phi \sim r^{-1}\)
+  - $\(E \sim r^{-2}\)$
+  - $\(\Phi \sim r^{-1}\)$
 
 #### Magnetostatics (Wire)
-- Solve for vector potential \(A_z\)
+- Solve for vector potential $\(A_z\)$
 - Magnetic field:
-  \[
+  $\[
   \mathbf{B} = \nabla \times \mathbf{A}
-  \]
+  \]$
 - Expected scaling:
-  - \(B \sim r^{-1}\)
-  - \(A_z \sim \ln r\)
+  - $\(B \sim r^{-1}\)$
+  - $\(A_z \sim \ln r\)$
 
 ---
 
@@ -94,9 +94,9 @@ The Poisson equation governs electrostatic and magnetostatic potentials.
 
 ## Discretisation
 
-- 3D lattice: \(N \times N \times N\)
+- 3D lattice: $\(N \times N \times N\)$
 - Finite difference Laplacian (7-point stencil)
-- Dirichlet boundary conditions (\(\Phi = 0\) at edges)
+- Dirichlet boundary conditions ($\(\Phi = 0\)$ at edges)
 
 ---
 
@@ -114,12 +114,12 @@ The Poisson equation governs electrostatic and magnetostatic potentials.
 
 ### 3. Successive Over-Relaxation (SOR)
 
-\[
+$\[
 \phi^{new} = (1 - \omega)\phi^{old} + \frac{\omega}{6}(\text{neighbors} + dx^2 \rho)
-\]
+\]$
 
 - Accelerated Gauss–Seidel
-- Optimal \(\omega \approx 1.9\)–\(1.95\)
+- Optimal $\(\omega \approx 1.9\)$–$\(1.95\)$
 - Includes:
   - Standard implementation
   - **Numba-optimised version** for speed
@@ -148,9 +148,9 @@ The Poisson equation governs electrostatic and magnetostatic potentials.
 
 ## Cahn–Hilliard
 - Total free energy:
-  \[
+  $\[
   F(t)
-  \]
+  \]$
 - Convergence based on energy fluctuations
 - Pattern formation dynamics
 
@@ -158,23 +158,23 @@ The Poisson equation governs electrostatic and magnetostatic potentials.
 
 ### Monopole Case
 - Electric field magnitude vs distance:
-  \[
+  $\[
   |E(r)| \sim r^{-2}
-  \]
+  \]$
 - Potential:
-  \[
+  $\[
   \Phi(r) \sim r^{-1}
-  \]
+  \]$
 
 ### Wire Case
 - Magnetic field:
-  \[
+  $\[
   |B(r)| \sim r^{-1}
-  \]
+  \]$
 - Vector potential:
-  \[
+  $\[
   A_z \sim \ln r
-  \]
+  \]$
 
 ---
 
@@ -229,7 +229,7 @@ python Poisson.py [OPTIONS]
 | `--solver` |  | str | gauss_seidel | Solver algorithm (`jacobi`, `gauss_seidel`, `sor`) |
 | `-w` |  | float | 1.94 | Relaxation parameter for SOR |
 | `--animate` |  | action |  | Animate solver evolution (midplane slice) |
-| `--sor_iter` |  | action |  | Sweep over relaxation parameter \(\omega\) and analyse convergence |
+| `--sor_iter` |  | action |  | Sweep over relaxation parameter $\(\omega\)$ and analyse convergence |
 
 ### Examples
 - solve Poisson equation (monopole)
@@ -268,11 +268,11 @@ The following figures are produced depending on the simulation type:
 ### Poisson (Monopole)
 - `Electric_vs_distance.png`  
   - Log–log plot of electric field magnitude vs distance  
-  - Includes fitted slope and theoretical \(r^{-2}\) comparison  
+  - Includes fitted slope and theoretical $\(r^{-2}\)$ comparison  
 
 - `potential_vs_distance.png`  
   - Log–log plot of electric potential vs distance  
-  - Validates \(r^{-1}\) behaviour  
+  - Validates $\(r^{-1}\)$ behaviour  
 
 - `monopole_contour.png`  
   - 2D contour plot of potential in the midplane  
@@ -285,10 +285,10 @@ The following figures are produced depending on the simulation type:
 ### Poisson (Wire)
 - `Magnetic_vs_distance.png`  
   - Log–log plot of magnetic field vs distance  
-  - Validates \(r^{-1}\) scaling  
+  - Validates $\(r^{-1}\)$ scaling  
 
 - `vector_potential_vs_distance.png`  
-  - Semi-log plot of vector potential \(A_z\) vs distance  
+  - Semi-log plot of vector potential $\(A_z\)$ vs distance  
   - Confirms logarithmic behaviour  
 
 - `magnetic_potential_contour.png`  
@@ -301,7 +301,7 @@ The following figures are produced depending on the simulation type:
 
 ### SOR Analysis
 - `sor_convergences_2.png`  
-  - Number of iterations to convergence vs relaxation parameter \(\omega\)
+  - Number of iterations to convergence vs relaxation parameter $\(\omega\)$
 
 ---
 
@@ -334,7 +334,7 @@ Raw numerical outputs are saved for further analysis:
   - Vector potential slice for wire case  
 
 - `sor_convergences_2.dat`  
-  - Convergence iterations for different \(\omega\)
+  - Convergence iterations for different $\(\omega\)$
 
 ---
 
@@ -346,15 +346,15 @@ Raw numerical outputs are saved for further analysis:
   - Sensitivity to timestep and grid resolution  
 
 - The **Poisson solver** verifies fundamental physical laws:
-  - Electric field: \(E \sim r^{-2}\)  
-  - Electric potential: \(\Phi \sim r^{-1}\)  
-  - Magnetic field (wire): \(B \sim r^{-1}\)  
-  - Vector potential: \(A_z \sim \ln r\)
+  - Electric field: $\(E \sim r^{-2}\)$  
+  - Electric potential: $\(\Phi \sim r^{-1}\)$  
+  - Magnetic field (wire): $\(B \sim r^{-1}\)$  
+  - Vector potential: $\(A_z \sim \ln r\)$
 
 - **Successive Over-Relaxation (SOR)**:
   - Significantly accelerates convergence  
-  - Requires careful tuning of \(\omega\)  
-  - Optimal values typically lie near \(1.9\)–\(1.95\)
+  - Requires careful tuning of $\(\omega\)$  
+  - Optimal values typically lie near $\(1.9\)$–$\(1.95\)$
 
 - Numerical considerations:
   - Boundary effects distort large-distance behaviour  
