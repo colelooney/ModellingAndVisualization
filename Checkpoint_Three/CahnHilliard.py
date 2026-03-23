@@ -18,7 +18,6 @@ class cahn_hilliard:
         phi_0: average composition
         dx: length step
         dt: time step
-        M: diffusion coefficient
         threshold: float value to determine if equlibrium has reached in energy change
         """
         self.N = N
@@ -101,10 +100,11 @@ class cahn_hilliard:
         self.phi = self.initialize_grid()
     
         fig = plt.figure()
-        im = plt.imshow(self.phi, animated=True, cmap='binary')
+        im = plt.imshow(self.phi, animated=True, cmap='coolwarm')
         
         def update_frame(_):
-            self.sweep_phi()
+            for j in range(10): # perform 10 sweeps per frame
+                self.sweep_phi()
             im.set_array(self.phi)
             return [im]
         
