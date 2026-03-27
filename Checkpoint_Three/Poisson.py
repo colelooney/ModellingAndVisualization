@@ -26,37 +26,27 @@ def numba_sor_sweep(w, N, phi, rho, dx, threshold):
     for it in range(1, 50001):
         diff = 0.0
         
-        # We perform two passes: one for Red, one for Black
-        # This ensures the Red-Black SOR logic is mathematically correct
         for pass_type in range(2):
             for i in range(1, N - 1):
                 for j in range(1, N - 1):
                     for k in range(1, N - 1):
-                        # Red-Black condition: (i + j + k) % 2 == 0 or 1
                         if (i + j + k) % 2 == pass_type:
                             old_val = phi[i, j, k]
                             
-                            # Standard 7-point stencil
                             neighbor_sum = (phi[i+1, j, k] + phi[i-1, j, k] +
                                             phi[i, j+1, k] + phi[i, j-1, k] +
                                             phi[i, j, k+1] + phi[i, j, k-1])
                             
-                            # SOR update formula
-                            # phi_new = (1-w)*phi_old + w/6 * (neighbors + dx^2 * rho)
                             new_val = (1.0 - w) * old_val + \
                                       (w * inv_6) * (neighbor_sum + dx2 * rho[i, j, k])
                             
                             phi[i, j, k] = new_val
                             
-                            # Update L2 norm difference (on the fly to save memory)
                             diff += (new_val - old_val)**2
         
-        # Calculate final norm
         final_diff = np.sqrt(diff)
         
         if final_diff <= threshold:
-            # Note: print() inside @njit works but is slightly slower; 
-            # ideally handle reporting outside
             return it
 
     return 50000
@@ -225,19 +215,6 @@ class poisson:
         while True:
             phi_old = np.copy(self.phi)
             self.gauss_seidel_step(phi_interior,rho_interior,mask_red,mask_black)
-            # neighbor_sum = (
-            #     self.phi[2:,1:-1,1:-1] + self.phi[:-2,1:-1,1:-1] +
-            #     self.phi[1:-1,2:,1:-1] + self.phi[1:-1,:-2,1:-1] +
-            #     self.phi[1:-1,1:-1,2:] + self.phi[1:-1,1:-1,:-2]
-            # )
-            # phi_interior[mask_red] = (1/6) * neighbor_sum[mask_red] + self.dx**2 * rho_interior[mask_red]
-            # # update neighbors with new reds
-            # neighbor_sum = (
-            #     self.phi[2:,1:-1,1:-1] + self.phi[:-2,1:-1,1:-1] +
-            #     self.phi[1:-1,2:,1:-1] + self.phi[1:-1,:-2,1:-1] +
-            #     self.phi[1:-1,1:-1,2:] + self.phi[1:-1,1:-1,:-2]
-            # )
-            # phi_interior[mask_black] = (1/6) * neighbor_sum[mask_black] + self.dx**2 * rho_interior[mask_black]
             diff = np.max(np.abs(phi_old - self.phi))
             if diff <= self.threshold:
                 break
@@ -289,23 +266,7 @@ class poisson:
             iter += 1
             phi_old = np.copy(self.phi)
             self.sor_step(w,phi_interior,rho_interior,mask_red,mask_black)
-            # neighbor_sum = (
-            #     self.phi[2:,1:-1,1:-1] + self.phi[:-2,1:-1,1:-1] +
-            #     self.phi[1:-1,2:,1:-1] + self.phi[1:-1,:-2,1:-1] +
-            #     self.phi[1:-1,1:-1,2:] + self.phi[1:-1,1:-1,:-2]
-            # )
-            # phi_interior[mask_red] = (1- w) * phi_interior[mask_red] + \
-            #     (w/6) * (neighbor_sum[mask_red] + self.dx**2 * rho_interior[mask_red])
-            # # update neighbors with new reds
-            # neighbor_sum = (
-            #     self.phi[2:,1:-1,1:-1] + self.phi[:-2,1:-1,1:-1] +
-            #     self.phi[1:-1,2:,1:-1] + self.phi[1:-1,:-2,1:-1] +
-            #     self.phi[1:-1,1:-1,2:] + self.phi[1:-1,1:-1,:-2]
-            # )
-            # phi_interior[mask_black] = (1- w) * phi_interior[mask_black] + \
-            #     (w/6) * (neighbor_sum[mask_black] + self.dx**2 * rho_interior[mask_black])
-        
-            # diff = np.linalg.norm(phi_old[1:-1,1:-1,1:-1]-self.phi[1:-1,1:-1,1:-1])
+            # neighbor_sum = (1,1:-1]-self.phi[1:-1,1:-1,1:-1])
             diff = np.max(np.abs(phi_old[1:-1,1:-1,1:-1] - self.phi[1:-1,1:-1,1:-1]))
             if diff <= self.threshold:
                 print(f'w: {w} converged at {iter} iterations')
@@ -421,93 +382,60 @@ class poisson:
         plt.show()
 
     def magnetic_strength_vs_distance(self):
-        """
-        Plot magnetic of magnetic field against distance vs reference
-        
-        returns:
-        None: saves plot to directory
-        """
-        field = self.magnetic_field()
-        field_mag = np.linalg.norm(field, axis=-1)
-        x, y, z = np.indices((self.N, self.N, self.N))
-        # Distance from the Z-axis (the wire)
-        r = np.sqrt((x - self.N//2)**2 + (y - self.N//2)**2) * self.dx
-        title = 'Magnetic field strength vs Distance'
-        filename = 'Magnetic_vs_distance.png'
+            field = self.magnetic_field()
+            field_mag = np.linalg.norm(field, axis=-1)
+            x, y, z = np.indices((self.N, self.N, self.N))
+            
+            r = np.sqrt((x - self.N//2)**2 + (y - self.N//2)**2) * self.dx
+            r_flat, B_flat = r.flatten(), field_mag.flatten()
 
-        r_flat = r.flatten()
-        B_flat = field_mag.flatten()
+            bins = np.linspace(0.5 * self.dx, np.max(r_flat), 50)
+            bin_centers = 0.5 * (bins[:-1] + bins[1:])
+            B_avg = np.array([np.mean(B_flat[(r_flat >= bins[i]) & (r_flat < bins[i+1])]) for i in range(len(bins)-1)])
 
-        mask = r_flat > 0
-        r_flat = r_flat[mask]
-        B_flat = B_flat[mask]
+            r_min_fit = 2 * self.dx
+            r_max_fit = (self.N // 2) * 0.7 * self.dx
 
+            # Masking: Target the middle 10% to 70% of the box radius
+            fit_mask = (bin_centers > 2 * self.dx) & (bin_centers < (self.N // 2) * 0.7 * self.dx) & (~np.isnan(B_avg))
+            coeffs = np.polyfit(np.log(bin_centers[fit_mask]), np.log(B_avg[fit_mask]), 1)
+            print(f"Magnetic Field Slope (Target -1.0): {coeffs[0]:.4f}")
 
-        # bin data
-        bins = np.linspace(0, np.max(r_flat), 50)
-        bin_centers = 0.5 * (bins[:-1] + bins[1:])
-        B_avg = []
+            plt.figure(figsize=(8, 6))
+            plt.loglog(bin_centers, B_avg, 'o', label='Simulation Data', alpha=0.6)
+            plt.loglog(bin_centers, np.exp(coeffs[1]) * bin_centers**coeffs[0], 'r-', label=f'Fit (Slope: {coeffs[0]:.2f})')
+            
+            # Reference r^-1
+            ref = bin_centers**-1
+            plt.loglog(bin_centers, ref * B_avg[fit_mask][0]/(bin_centers[fit_mask][0]**-1), 'k--', label=r'Theoretical $r^{-1}$', alpha=0.5)
 
+            plt.axvspan(0, r_min_fit, color='gray', alpha=0.1, label='Singularity Region')
+            plt.axvspan(r_max_fit, np.max(r_flat), color='red', alpha=0.1, label='Boundary Effects')
+            np.savetxt('magnetic_strength_vs_distance.dat',
+                    np.column_stack((bin_centers, B_avg)),
+                    header='r |B|')
 
-        for i in range(len(bins)-1):
-            m = (r_flat >= bins[i]) & (r_flat < bins[i+1])
-            if np.any(m):
-                B_avg.append(np.mean(B_flat[m]))
-            else:
-                B_avg.append(np.nan)
-
-        B_avg = np.array(B_avg)
-
-        # plot
-        plt.figure()
-        plt.loglog(bin_centers, B_avg, 'o', label='Simulation')
-
-        # reference r^-1
-        ref = bin_centers**-1
-        plt.loglog(bin_centers, ref * B_avg[1]/ref[1], '--', label=r'$r^{-1}$')
-
-        plt.xlabel('Distance r')
-        plt.ylabel('|B|')
-        plt.legend()
-        plt.title(title)
-        plt.savefig(filename)
-        plt.show()
-
-        # save data
-        np.savetxt('magnetic_field_vs_distance.dat',
-                np.column_stack((bin_centers, B_avg)),
-                header='r |E|')
+            plt.xlabel('Distance r')
+            plt.ylabel('|B|')
+            plt.title('Magnetic Field Strength vs Distance (Wire)')
+            plt.legend()
+            plt.savefig('Magnetic_vs_distance.png')
+            plt.show()
 
     def field_strength_vs_distance(self):
-        """
-        compute and plot the field strength of |E| as function of distance
-
-        returns:
-        None: saves file to directory
-        """
         E = self.electric_field()
-        field_mag = np.linalg.norm(E,axis=-1)
+        field_mag = np.linalg.norm(E, axis=-1)
 
         x, y, z = np.indices((self.N, self.N, self.N))
         cx = cy = cz = self.N // 2
-
         r = np.sqrt((x - cx)**2 + (y - cy)**2 + (z - cz)**2) * self.dx
-        title = 'Electric field strength vs Distance'
-        filename = 'Electric_vs_distance.png'
 
         r_flat = r.flatten()
         E_flat = field_mag.flatten()
 
-        mask = r_flat > 0
-        r_flat = r_flat[mask]
-        E_flat = E_flat[mask]
-
-
-        # bin data
-        bins = np.linspace(0, np.max(r_flat), 50)
+        bins = np.linspace(0.5 * self.dx, np.max(r_flat), 50)
         bin_centers = 0.5 * (bins[:-1] + bins[1:])
         E_avg = []
-
 
         for i in range(len(bins)-1):
             m = (r_flat >= bins[i]) & (r_flat < bins[i+1])
@@ -518,137 +446,129 @@ class poisson:
 
         E_avg = np.array(E_avg)
 
-        # plot
-        plt.figure()
-        plt.loglog(bin_centers, E_avg, 'o', label='Simulation')
+        r_min_fit = 2 * self.dx
+        r_max_fit = (self.N // 2) * 0.7 * self.dx
+        
+        fit_mask = (bin_centers > r_min_fit) & (bin_centers < r_max_fit) & (~np.isnan(E_avg))
+        
+        r_to_fit = bin_centers[fit_mask]
+        E_to_fit = E_avg[fit_mask]
 
-        # reference r^-2
+        coeffs = np.polyfit(np.log(r_to_fit), np.log(E_to_fit), 1)
+        print(f"Electric Field Strength Slope (Target -2.0): {coeffs[0]:.4f}")
+
+        plt.figure(figsize=(8, 6))
+        plt.loglog(bin_centers, E_avg, 'o', label='Binned Simulation Data', alpha=0.6)
+        
+        fit_line = np.exp(coeffs[1]) * bin_centers**coeffs[0]
+        plt.loglog(bin_centers, fit_line, 'r-', label=f'Fit (Slope: {coeffs[0]:.2f})')
+        
+        # Reference r^-2
         ref = bin_centers**-2
-        plt.loglog(bin_centers, ref * E_avg[1]/ref[1], '--', label=r'$r^{-2}$')
+        plt.loglog(bin_centers, ref * E_to_fit[0]/(r_to_fit[0]**-2), 'k--', label=r'Theoretical $r^{-2}$', alpha=0.5)
 
-        plt.xlabel('Distance r')
-        plt.ylabel('|E|')
-        plt.legend()
-        plt.title(title)
-        plt.savefig(filename)
-        plt.show()
+        plt.axvspan(0, r_min_fit, color='gray', alpha=0.1, label='Singularity Region')
+        plt.axvspan(r_max_fit, np.max(r_flat), color='red', alpha=0.1, label='Boundary Effects')
 
-        # save data
-        np.savetxt('field_vs_distance.dat',
+        np.savetxt('vector_potential_vs_distance.dat',
                 np.column_stack((bin_centers, E_avg)),
-                header='r |E|')
+                header='r E')
+
+        plt.xlabel('Log(Distance r)')
+        plt.ylabel('Log(|E|)')
+        plt.legend()
+        plt.title('Electric Field Strength vs Distance (Monopole)')
+        plt.savefig('Electric_vs_distance.png')
+        plt.show()
         
     def vector_potential_vs_distance(self):
-        """
-        compute and plot the potential as function of distance
+            """
+            Compute and plot Az vs ln(r). 
+            For a wire, Az should be proportional to ln(r).
+            """
+            phi_flat = self.phi.flatten()
+            x, y, z = np.indices((self.N, self.N, self.N))
+            
+            r = np.sqrt((x - self.N//2)**2 + (y - self.N//2)**2) * self.dx
+            r_flat = r.flatten()
 
-        returns:
-        None: saves file to directory
-        """
-        phi_flat = self.phi.flatten()
+            bins = np.linspace(0.5 * self.dx, np.max(r_flat), 50)
+            bin_centers = 0.5 * (bins[:-1] + bins[1:])
+            phi_avg = np.array([
+                np.mean(phi_flat[(r_flat >= bins[i]) & (r_flat < bins[i+1])]) 
+                for i in range(len(bins)-1)
+            ])
 
-        x, y,z = np.indices((self.N, self.N,self.N))
-        cx = cy = self.N // 2
+            valid_mask = (~np.isnan(phi_avg)) & (bin_centers > 0)
+            r_clean = bin_centers[valid_mask]
+            phi_clean = phi_avg[valid_mask]
 
-        r = np.sqrt((x - cx)**2 + (y - cy)**2) * self.dx # distance from z axis
+            r_min_fit = 2 * self.dx
+            r_max_fit = (self.N // 2) * 0.7 * self.dx
 
-        r_flat = r.flatten()
+            fit_mask = (r_clean > 2 * self.dx) & (r_clean < (self.N // 2) * 0.7 * self.dx)
+            
+            coeffs = np.polyfit(np.log(r_clean[fit_mask]), phi_clean[fit_mask], 1)
+            
+            print(f"Vector Potential Semi-log Slope (m in m*ln(r)+c): {coeffs[0]:.4f}")
 
-        mask = r_flat > 0
-        r_flat = r_flat[mask]
-        phi_flat = phi_flat[mask]
+            plt.figure(figsize=(8, 6))
+            
+            plt.semilogx(r_clean, phi_clean, 'o', label='Simulation $A_z$', alpha=0.6)
+            
+            fit_line = coeffs[0] * np.log(r_clean) + coeffs[1]
+            plt.semilogx(r_clean, fit_line, 'r-', label=f'Fit: {coeffs[0]:.2f} ln(r) + {coeffs[1]:.2f}')
 
+            plt.axvspan(0, r_min_fit, color='gray', alpha=0.1, label='Singularity Region')
+            plt.axvspan(r_max_fit, np.max(r_flat), color='red', alpha=0.1, label='Boundary Effects')
 
-        # bin data
-        bins = np.linspace(0, np.max(r_flat), 50)
-        bin_centers = 0.5 * (bins[:-1] + bins[1:])
-        phi_avg = []
+            plt.xlabel('Distance r (log scale)')
+            plt.ylabel('Vector Potential $A_z$')
+            plt.title('Semi-log plot of Vector Potential vs Distance (Wire)')
+            plt.grid(True, which="both", ls="-", alpha=0.2)
+            plt.legend()
+            
+            plt.savefig('vector_potential_vs_distance.png')
+            plt.show()
 
-
-        for i in range(len(bins)-1):
-            m = (r_flat >= bins[i]) & (r_flat < bins[i+1])
-            if np.any(m):
-                phi_avg.append(np.mean(phi_flat[m]))
-            else:
-                phi_avg.append(np.nan)
-
-        phi_avg = np.array(phi_avg)
-
-        # plot
-        plt.figure()
-        plt.loglog(bin_centers, phi_avg, 'o', label='Simulation')
-
-        # reference r^-2
-        ref = bin_centers**-1
-        plt.loglog(bin_centers, ref * phi_avg[1]/ref[1], '--', label=r'$r^{-1}$')
-
-        plt.xlabel('Distance r')
-        plt.ylabel('|V|')
-        plt.legend()
-        plt.title('Vector Potential vs Distance')
-        plt.savefig('vector_potential_vs_distance.png')
-        plt.show()
-
-        # save data
-        np.savetxt('vector_potential_vs_distance.dat',
-                np.column_stack((bin_centers, phi_avg)),
-                header='r |V|')
+            np.savetxt('vector_potential_vs_distance.dat',
+                    np.column_stack((r_clean, phi_clean)),
+                    header='r Az')
 
     def potential_vs_distance(self):
-        """
-        compute and plot the potential as function of distance
+            phi_flat = self.phi.flatten()
+            x, y, z = np.indices((self.N, self.N, self.N))
+            r = np.sqrt((x - self.N//2)**2 + (y - self.N//2)**2 + (z - self.N//2)**2) * self.dx
+            r_flat = r.flatten()
 
-        returns:
-        None: saves file to directory
-        """
-        phi_flat = self.phi.flatten()
+            bins = np.linspace(0.5 * self.dx, np.max(r_flat), 50)
+            bin_centers = 0.5 * (bins[:-1] + bins[1:])
+            phi_avg = np.array([np.mean(phi_flat[(r_flat >= bins[i]) & (r_flat < bins[i+1])]) for i in range(len(bins)-1)])
 
-        x, y, z = np.indices((self.N, self.N, self.N))
-        cx = cy = cz = self.N // 2
+            # Apply mask to avoid boundary dip
+            fit_mask = (bin_centers > 2 * self.dx) & (bin_centers < (self.N // 2) * 0.5 * self.dx) & (phi_avg > 0)
+            coeffs = np.polyfit(np.log(bin_centers[fit_mask]), np.log(phi_avg[fit_mask]), 1)
+            print(f"Electric Potential Slope (Target -1.0): {coeffs[0]:.4f}")
 
-        r = np.sqrt((x - cx)**2 + (y - cy)**2 + (z - cz)**2) * self.dx
+            r_min_fit = 2 * self.dx
+            r_max_fit = (self.N // 2) * 0.7 * self.dx
 
-        r_flat = r.flatten()
+            np.savetxt('electric_potential_vs_distance.dat',
+                    np.column_stack((bin_centers, phi_avg)),
+                    header='r |V|')
 
-        mask = r_flat > 0
-        r_flat = r_flat[mask]
-        phi_flat = phi_flat[mask]
+            plt.figure(figsize=(8, 6))
+            plt.loglog(bin_centers, phi_avg, 'o', label='Simulation Data')
+            plt.loglog(bin_centers, np.exp(coeffs[1]) * bin_centers**coeffs[0], 'r-', label=f'Fit (Slope: {coeffs[0]:.2f})')
 
-
-        # bin data
-        bins = np.linspace(0, np.max(r_flat), 50)
-        bin_centers = 0.5 * (bins[:-1] + bins[1:])
-        phi_avg = []
-
-
-        for i in range(len(bins)-1):
-            m = (r_flat >= bins[i]) & (r_flat < bins[i+1])
-            if np.any(m):
-                phi_avg.append(np.mean(phi_flat[m]))
-            else:
-                phi_avg.append(np.nan)
-
-        phi_avg = np.array(phi_avg)
-
-        # plot
-        plt.figure()
-        plt.loglog(bin_centers, phi_avg, 'o', label='Simulation')
-
-        # reference r^-2
-        ref = bin_centers**-1
-        plt.loglog(bin_centers, ref * phi_avg[1]/ref[1], '--', label=r'$r^{-1}$')
-
-        plt.xlabel('Distance r')
-        plt.ylabel('|V|')
-        plt.legend()
-        plt.title('Potential vs Distance')
-        plt.savefig('potential_vs_distance.png')
-        plt.show()
-
-        # save data
-        np.savetxt('potential_vs_distance.dat',
-                np.column_stack((bin_centers, phi_avg)),
-                header='r |V|')
+            plt.axvspan(0, r_min_fit, color='gray', alpha=0.1, label='Singularity Region')
+            plt.axvspan(r_max_fit, np.max(r_flat), color='red', alpha=0.1, label='Boundary Effects')
+            plt.xlabel('Distance r')
+            plt.ylabel(r'Potential $\Phi$')
+            plt.title('Potential vs Distance (Monopole)')
+            plt.legend()
+            plt.savefig('potential_vs_distance.png')
+            plt.show()
 
     def solve(self):
         """

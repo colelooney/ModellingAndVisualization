@@ -71,6 +71,10 @@ $\[
 
 ### Physical Interpretations
 
+#### Boundary Conditions
+- The potential $\(\Phi\)$ is set to zero along the boundaries of the grid
+  - Dirichlet Boundary conditions
+
 #### Electrostatics (Monopole)
 - $\(\Phi\)$: electric potential
 - $\(\mathbf{E} = -\nabla \Phi\)$

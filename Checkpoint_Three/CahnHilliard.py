@@ -7,8 +7,6 @@ import matplotlib.pyplot as plt
 import math
 import matplotlib.animation as animation
 import argparse
-from scipy.signal import convolve2d
-from collections import deque
 
 class cahn_hilliard:
 
@@ -75,6 +73,7 @@ class cahn_hilliard:
         """
         mu = self.chemical_potential()
         self.phi += self.dt * self.laplacian(mu)
+        self.phi -= np.mean(self.phi) - self.phi_0 # ensure mass conservation
 
     def free_energy(self):
         """
@@ -86,6 +85,9 @@ class cahn_hilliard:
         f = - 1/2 * self.phi**2 + 1/4 * self.phi**4 
         grad_x = (np.roll(self.phi, -1, axis=0) - np.roll(self.phi, 1, axis=0)) / (2 * self.dx)
         grad_y = (np.roll(self.phi, -1, axis=1) - np.roll(self.phi, 1, axis=1)) / (2 * self.dx)
+
+        # grad_x = (np.roll(self.phi, -1, axis=0) - self.phi) / (2 * self.dx)
+        # grad_y = (np.roll(self.phi, -1, axis=1) - self.phi) / (2 * self.dx)
 
         f += 0.5 * (grad_x**2 + grad_y **2)
         return np.sum(f)
@@ -131,7 +133,8 @@ class cahn_hilliard:
 
             if i > window: # some equilibriation
                 recent = energy_history[-window:]
-                if max(recent) - min(recent) < self.threshold:
+                if np.std(recent) < self.threshold:
+                    # if np.argmax(recent) > np.argmin(recent): #ensure it's going down
                     print(f"Equilibrium reached at iteration {i} (Threshold: {self.threshold})")
                     converged = True
                     break
