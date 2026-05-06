@@ -67,7 +67,8 @@ class GameOfLife:
         self.centres_of_mass = [] # list to store the centre of mass of the alive cells at each time step
         self.initial_state_patterns = PATTERNS
 
-        self.initialize_grid()
+        self.current_grid = self.initialize_grid()
+        self.future_grid = np.copy(self.current_grid)
 
 
     def initialize_grid(self):
@@ -142,6 +143,7 @@ class GameOfLife:
         ).astype(int)
 
     def get_centre_of_mass(self):
+        # measures speed every few steps
         """
         Calculate the centre of mass of the alive cells in the current grid
         
@@ -197,6 +199,7 @@ class GameOfLife:
         plt.show()
 
     def plot_equilibrium_times(self):
+        # more bins
         """
         Plot a histogram of the equilibrium times across all runs
 
