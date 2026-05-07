@@ -4,3 +4,5 @@
 *.npz
 __pycache__/
 *.dat
+*.pdf
+Content/
