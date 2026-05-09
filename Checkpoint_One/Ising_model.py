@@ -287,16 +287,24 @@ class IsingModel:
         chi = (avg_mag_squared - avg_mag**2) / (self.N**2 * self.T)
         return chi
     
+    # def total_energy(self):
+    #     """
+    #     Compute the total energy of the lattice for the current configuration
+    #     """
+    #     E = 0
+    #     for i in range(self.N):
+    #         for j in range(self.N):
+    #             for ni, nj in self.find_nearest_neighbors(i, j):
+    #                 E += -self.J * self.grid[i, j] * self.grid[ni, nj]
+    #     return E / 2  # remove double counting
+
     def total_energy(self):
         """
-        Compute the total energy of the lattice for the current configuration
+        Compute the total energy of the lattice for the current configuration vectorized version
         """
-        E = 0
-        for i in range(self.N):
-            for j in range(self.N):
-                for ni, nj in self.find_nearest_neighbors(i, j):
-                    E += -self.J * self.grid[i, j] * self.grid[ni, nj]
-        return E / 2  # remove double counting
+        E = -self.J * np.sum(self.grid * np.roll(self.grid, -1, axis = 0)
+                             + self.grid * np.roll(self.grid, -1, axis = 1))
+        return E
 
     def heat_capacity_from_energies(self, energies):
         # small helper function to calculate heat capacity from list of energies
@@ -394,12 +402,11 @@ class IsingModel:
         temperatures = []
 
         self.T = 3.0
+
+        self.update_fn = self.glauber_update if self.dynamic == 'glauber' else self.kawasaki_update
         for i in range(4900): # equilibration steps, warm up time of 5000 sweeps for first grid. 100 extra sweeps in each temp
             for _ in range(self.N * self.N):
-                if self.dynamic == 'glauber':
-                    self.glauber_update()
-                elif self.dynamic == 'kawasaki':
-                    self.kawasaki_update()
+                self.update_fn()
         for T in np.arange(self.start_temp, self.end_temp - 0.1 * temp_range, step_size):
             # Subtract 0.1 * range to ensure we include end_temp in the range due to floating point precision issues
             self.T = T
@@ -411,16 +418,10 @@ class IsingModel:
 
             for i in range(100): # equilibration steps at each temperatures
                 for _ in range(self.N * self.N):
-                    if self.dynamic == 'glauber':
-                        self.glauber_update()
-                    elif self.dynamic == 'kawasaki':
-                        self.kawasaki_update()
+                    self.update_fn()
             for i in range(10000): # data collection steps
                 for _ in range(self.N * self.N):
-                    if self.dynamic == 'glauber':
-                        self.glauber_update()
-                    elif self.dynamic == 'kawasaki':
-                        self.kawasaki_update()
+                    self.update_fn()
                 if i % 10 == 0:
                     if self.dynamic == 'glauber':
                         temp_mag, temp_mag_squared = self.determine_magnetisation()
@@ -431,7 +432,6 @@ class IsingModel:
 
             if self.dynamic == 'glauber':
                 #Only calculate magnetisation and susceptibility for glauber dynamics
-                # avg_mag = abs(np.mean(temp_mags))
                 avg_mag = np.mean(np.abs(temp_mags))
                 avg_mag_squared = np.mean(temp_mags_squared)
                 chi = self.magnetic_susceptibility(avg_mag, avg_mag_squared)
