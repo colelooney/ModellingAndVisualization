@@ -234,12 +234,12 @@ class GameOfLife:
         np.savez(f'{self.initial_state}',
                  centres_of_mass =centres_of_mass_array,
                  times = time,
-                 speed = slope,
+                 speed = slope/4,
                  distance = cum_dist,
                  y_intercept = intercept)
         
         plt.plot(time, cum_dist, 'bo', markersize=2, color='blue', label='Centre of Mass Trajectory')
-        plt.plot(time, slope*time + intercept, 'r-', label=f'Fit: v={slope:.3f}') 
+        plt.plot(time, slope*time + intercept, 'r-', label=f'Fit: v={slope/4:.3f}') 
         plt.legend()
         plt.title('Trajectory of Centre of Mass of Alive Cells')
         plt.xlabel('Time iteration')
@@ -331,7 +331,9 @@ class GameOfLife:
                  # Update current grid
                 self.current_grid = self.future_grid.copy()
                 self.time_steps += 1
-                self.centres_of_mass.append(self.get_centre_of_mass())
+                if self.time_steps % 4 == 0:
+                    # measure speed every period of the glider to capture its movement accurately
+                    self.centres_of_mass.append(self.get_centre_of_mass())
 
         self.plot_centres_of_mass()
 
