@@ -11,7 +11,7 @@ from scipy.signal import convolve2d
 from collections import deque
 
 from numba import njit
-
+# Normalise the vector fields
 @njit
 def numba_sor_sweep(w, N, phi, rho, dx, threshold):
     """
